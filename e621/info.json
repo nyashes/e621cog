@@ -1,0 +1,21 @@
+{
+    "author": [
+      "nyashes"
+    ],
+    "bot_version": [
+      3,
+      0,
+      0
+    ],
+    "description": "add some lewd commands",
+    "hidden": false,
+    "install_msg": "e621 module installed`",
+    "short": "LEWDS!",
+    "tags": [
+      "fox",
+      "bobloy",
+      "utility",
+      "tools",
+      "roles"
+    ]
+  }
