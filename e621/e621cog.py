@@ -197,11 +197,11 @@ async def fetch_image(self, ctx, randomize : bool=False, tags : list=[]):
             result = list(filter(lambda x: filter_fun(normal_tags, negative_tags, x), website))
             
             if len(result) == 0:
-                return await message.edit(content="Error: split search unsuccessful with {} items and MS='{}', SS='{}', NS='{}'"
+                return await message.edit(content="Error: split search unsuccessful with {} items and MS='{}', SS='{}', NS='{}'".format(
                     , max(50, len(normal_tags) * 20)
                     , ", ".join(special_tags)
                     , ", ".join(normal_tags)
-                    , ", ".join(negative_tags))
+                    , ", ".join(negative_tags)))
 
         result = result[0]
         
