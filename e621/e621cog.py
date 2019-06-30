@@ -168,7 +168,7 @@ async def fetch_image(self, ctx, randomize : bool=False, tags : list=[]):
         else:
             special_tags = []
             normal_tags = []
-            for tag in tags
+            for tag in tags:
                 if ":" in tag:
                     special_tags.append(tag)
                 else:
