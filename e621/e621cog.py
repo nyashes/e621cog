@@ -163,7 +163,7 @@ async def fetch_image(self, ctx, randomize : bool=False, tags : list=[]):
 
         if not split_search:
             # just take the first result
-            result = sub_fetch_image(self, ctx, 1, tags)
+            result = await sub_fetch_image(self, ctx, 1, tags)
             if not result:
                 return await message.edit(content="Error.")
         else:
@@ -178,7 +178,7 @@ async def fetch_image(self, ctx, randomize : bool=False, tags : list=[]):
             while len(special_tags) < 6 and len(normal_tags) > 0:
                 special_tags.append(normal_tags.pop(0))
                 
-            website = sub_fetch_image(self, ctx, max(50, len(normal_tags) * 20), special_tags)
+            website = await sub_fetch_image(self, ctx, max(50, len(normal_tags) * 20), special_tags)
             if not website:
                 return await message.edit(content="Error.")
 
