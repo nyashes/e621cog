@@ -43,7 +43,7 @@ class E621(commands.Cog):
            Example: !e621filter add rating:s"""
         guild_group = self.config.guild(ctx.guild)
         async with guild_group.server_filter() as server_filter:
-            if len(server_filter) < 50):
+            if len(server_filter) < 50:
                 if filtertag not in server_filter:
                     server_filter.append(filtertag)
                     await ctx.send("Filter '{}' added to the server's e621 filter list.".format(filtertag))
