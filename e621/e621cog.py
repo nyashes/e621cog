@@ -150,7 +150,7 @@ async def fetch_image(self, ctx, randomize : bool=False, tags : list=[]):
         verbose = await self.config.guild(ctx.guild).verbose()
 
         # check for split search mode
-        split_search = await self.config.guild(ctx.guild).verbose()
+        split_search = await self.config.guild(ctx.guild).split_search()
 
         #Inform users about image retrieval
         message = await ctx.send("Fetching e621 image...")
@@ -175,7 +175,7 @@ async def fetch_image(self, ctx, randomize : bool=False, tags : list=[]):
                 else:
                     normal_tags.append(tag)
 
-            while len(special_tags) < 6:
+            while len(special_tags) < 6 and len(normal_tags) > 0:
                 special_tags.append(normal_tags.pop(0))
                 
             website = sub_fetch_image(self, ctx, max(50, len(normal_tags) * 20), special_tags)
