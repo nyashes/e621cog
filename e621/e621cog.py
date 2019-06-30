@@ -137,6 +137,7 @@ async def fetch_image(self, ctx, randomize : bool=False, tags : list=[]):
             async with aiohttp.ClientSession() as session:
                 async with session.get(search, headers={'User-Agent': "Red 3.0 cog/1.0 (Nyashes)"}) as r:
                     website = await r.json()
+                    statusCode = r.status
 
             if website != []:
                 if "success" not in website:
@@ -193,7 +194,7 @@ async def fetch_image(self, ctx, randomize : bool=False, tags : list=[]):
                         # Edits the pending message with the result
                         await message.edit(content=imageURL)
                 else:
-                    await message.edit(content="{}".format(website["message"]))
+                    await message.edit(content="{} (http returned: {})".format(website["reason"], statusCode))
             else:
                 await message.edit(content="Your search terms '{}' gave no results.".format(search))
         except Exception as e:
