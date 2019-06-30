@@ -188,7 +188,7 @@ async def fetch_image(self, ctx, randomize : bool=False, tags : list=[]):
             if not website:
                 return await message.edit(content="Error.")
 
-            def filter_fun(mt, nt, x)
+            def filter_fun(mt, nt, x):
                 normal_set = set(mt)
                 negative_set = set(nt)
                 current_set = set(x.get('tags').split(' '))
