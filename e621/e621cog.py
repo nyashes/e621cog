@@ -169,20 +169,39 @@ async def fetch_image(self, ctx, randomize : bool=False, tags : list=[]):
         else:
             special_tags = []
             normal_tags = []
+            negative_tags = []
             for tag in tags:
-                if ":" in tag:
+                if ":" in tag or "~" in tag:
                     special_tags.append(tag)
+                elif "-" in tag:
+                    negative_tags.append(tag)
                 else:
                     normal_tags.append(tag)
+
+            while len(special_tags) < 6 and len(negative_tags) > 0:
+                special_tags.append(negative_tags.pop(0))
 
             while len(special_tags) < 6 and len(normal_tags) > 0:
                 special_tags.append(normal_tags.pop(0))
                 
-            website = await sub_fetch_image(self, ctx, max(50, len(normal_tags) * 20), special_tags)
+            website = await sub_fetch_image(self, ctx, max(50, (len(negative_tags) + len(normal_tags)) * 20), special_tags)
             if not website:
                 return await message.edit(content="Error.")
 
-            result = list(filter(lambda x: set(normal_tags).issubset(set(x.get('tags').split(' '))), website))
+            def filter_fun(mt, nt, x)
+                normal_set = set(mt)
+                negative_set = set(nt)
+                current_set = set(x.get('tags').split(' '))
+                return normal_set.issubset(current_set) and negative_set.isdisjoint(negative_set)
+
+            result = list(filter(lambda x: filter_fun(normal_tags, negative_tags, x), website))
+            
+            if len(result) == 0:
+                return await message.edit(content="Error: split search unsuccessful with {} items and MS='{}', SS='{}', NS='{}'"
+                    , max(50, len(normal_tags) * 20)
+                    , ", ".join(special_tags)
+                    , ", ".join(normal_tags)
+                    , ", ".join(negative_tags))
 
         result = result[0]
         
