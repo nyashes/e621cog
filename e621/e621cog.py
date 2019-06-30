@@ -155,6 +155,7 @@ async def fetch_image(self, ctx, randomize : bool=False, tags : list=[]):
         #Inform users about image retrieval
         message = await ctx.send("Fetching e621 image...")
         
+        tags = list(tags)
         tags.append(server_filter)
 
         if randomize:
