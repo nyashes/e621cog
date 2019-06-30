@@ -10,6 +10,7 @@ class E621(commands.Cog):
         self.config = Config.get_conf(self, identifier=5800862169)
         self.default_guild = {
             "verbose": False,
+            "split_search": False,
             "server_filter": ["-scat", "-watersport", "-cub"],
         }
         self.default_member = {
@@ -96,6 +97,37 @@ class E621(commands.Cog):
             await self.config.guild(ctx.guild).verbose.set(False)
             await ctx.send("Verbose mode is now disabled.")
 
+    @e621set.command(pass_context=True,name="split_search")
+    @checks.is_owner()
+    async def _split_search_e621set(self, ctx, toggle : str="toggle"):
+        """Toggles split search mode"""
+        if toggle.lower() == "on" or toggle.lower() == "true" or toggle.lower() == "enable":
+            await self.config.guild(ctx.guild).split_search.set(True)
+            await ctx.send("split_search mode is now enabled.")
+        elif toggle.lower() == "off" or toggle.lower() == "false" or toggle.lower() == "disable":
+            await self.config.guild(ctx.guild).split_search.set(False)
+            await ctx.send("split_search mode is now disabled.")
+
+async def sub_fetch_image(self, ctx, limit, tags : list=[]):
+    search      = "http://e621.net/post/index.json?limit={}&tags=".format(limit) + " ".join(tags)
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(search, headers={'User-Agent': "Red 3.0 cog/1.0 (Nyashes)"}) as r:
+                website = await r.json()
+                statusCode = r.status
+
+        if website != []:
+            if "success" not in website:
+                return website
+            else:
+                await ctx.send(content="{} (http returned: {})".format(website["reason"], statusCode))
+        else:
+            await ctx.send(content="Your search terms '{}' gave no results.".format(search))
+    except Exception as e:
+        await ctx.send(content="{}".format(e))
+    
+    return False
+
 async def fetch_image(self, ctx, randomize : bool=False, tags : list=[]):
     guild_group = self.config.guild(ctx.guild)
     async with guild_group.server_filter() as server_filter:
@@ -113,89 +145,95 @@ async def fetch_image(self, ctx, randomize : bool=False, tags : list=[]):
         ratingWord  = "unknown"
         search      = "http://e621.net/post/index.json?limit=1&tags="
         tagSearch   = ""
-        verbose     = False
 
         # Set verbosity to true if the current server has it set as such
         verbose = await self.config.guild(ctx.guild).verbose()
 
-        # Assign tags to URL
-        if tags:
-            tagSearch += "{} ".format(" ".join(tags))
-
-        tagSearch += " ".join(server_filter)
-
-        # Randomize results
-        if randomize:
-            tagSearch += " order:random"
-        search += parse.quote_plus(tagSearch)
+        # check for split search mode
+        split_search = await self.config.guild(ctx.guild).verbose()
 
         #Inform users about image retrieval
         message = await ctx.send("Fetching e621 image...")
-
-        # Fetch and display the image or an error
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(search, headers={'User-Agent': "Red 3.0 cog/1.0 (Nyashes)"}) as r:
-                    website = await r.json()
-                    statusCode = r.status
-
-            if website != []:
-                if "success" not in website:
-                    imageURL = website[0].get('file_url')
-                    if verbose:
-                        # Fetches the image ID
-                        imageId = website[0].get('id')
-
-                        # Sets the embed title
-                        embedTitle = "e621 Image #{}".format(imageId)
         
-                        # Sets the URL to be linked
-                        embedLink = "https://e621.net/post/show/{}".format(imageId)
+        tags.append(server_filter)
 
-                        # Check for the rating and set an appropriate color
-                        rating = website[0].get('rating')
-                        if rating == "s":
-                            ratingColor = "00FF00"
-                            ratingWord = "safe"
-                        elif ratingWord == "q":
-                            ratingColor = "FF9900"
-                            ratingWord = "questionable"
-                        elif rating == "e":
-                            ratingColor = "FF0000"
-                            ratingWord = "explicit"
+        if randomize:
+            tags.append("order:random")
 
-                        # Grabs the artist(s)
-                        artistList = website[0].get('artist')
-
-                        # Determine if there are multiple artists
-                        if len(artistList) == 1:
-                            artist = artistList[0].replace('_', ' ')
-                        elif len(artistList > 1):
-                            artists = ", ".join(artistList).replace('_', ' ')
-
-                        # Sets the tags to be listed
-                        tagList = website[0].get('tags').replace(' ', ', ').replace('_', '\_')
-                        
-                        # Initialize verbose embed
-                        output = discord.Embed(title=embedTitle, url=embedLink, colour=discord.Colour(value=int(ratingColor, 16)))
-
-                        # Sets the thumbnail and adds the rating, artist, and tag fields to the embed
-                        output.add_field(name="Rating", value=ratingWord)
-                        if artist:
-                            output.add_field(name="Artist", value=artist)
-                        elif artist:
-                            output.add_field(name="Artists", value=artists)
-                        output.add_field(name="Tags", value=tagList, inline=False)
-                        output.set_thumbnail(url=imageURL)
-
-                        # Edits the pending message with the results
-                        await message.edit(content="Image found.", embed=output)
-                    else:
-                        # Edits the pending message with the result
-                        await message.edit(content=imageURL)
+        if not split_search:
+            # just take the first result
+            result = sub_fetch_image(self, ctx, 1, tags)
+            if not result:
+                return await message.edit(content="Error.")
+        else:
+            special_tags = []
+            normal_tags = []
+            for tag in tags
+                if ":" in tag:
+                    special_tags.append(tag)
                 else:
-                    await message.edit(content="{} (http returned: {})".format(website["reason"], statusCode))
-            else:
-                await message.edit(content="Your search terms '{}' gave no results.".format(search))
-        except Exception as e:
-            await message.edit(content="{}".format(e))
+                    normal_tags.append(tag)
+
+            while len(special_tags) < 6:
+                special_tags.append(normal_tags.pop(0))
+                
+            website = sub_fetch_image(self, ctx, max(50, len(normal_tags) * 20), special_tags)
+            if not website:
+                return await message.edit(content="Error.")
+
+            result = list(filter(lambda x: set(normal_tags).issubset(set(fx.get('tags').split(' '))), website))
+
+        result = result[0]
+        
+        imageURL = result.get('file_url')
+        if verbose:
+            # Fetches the image ID
+            imageId = result.get('id')
+
+            # Sets the embed title
+            embedTitle = "e621 Image #{}".format(imageId)
+
+            # Sets the URL to be linked
+            embedLink = "https://e621.net/post/show/{}".format(imageId)
+
+            # Check for the rating and set an appropriate color
+            rating = result.get('rating')
+            if rating == "s":
+                ratingColor = "00FF00"
+                ratingWord = "safe"
+            elif ratingWord == "q":
+                ratingColor = "FF9900"
+                ratingWord = "questionable"
+            elif rating == "e":
+                ratingColor = "FF0000"
+                ratingWord = "explicit"
+
+            # Grabs the artist(s)
+            artistList = result.get('artist')
+
+            # Determine if there are multiple artists
+            if len(artistList) == 1:
+                artist = artistList[0].replace('_', ' ')
+            elif len(artistList > 1):
+                artists = ", ".join(artistList).replace('_', ' ')
+
+            # Sets the tags to be listed
+            tagList = result.get('tags').replace(' ', ', ').replace('_', '\_')
+            
+            # Initialize verbose embed
+            output = discord.Embed(title=embedTitle, url=embedLink, colour=discord.Colour(value=int(ratingColor, 16)))
+
+            # Sets the thumbnail and adds the rating, artist, and tag fields to the embed
+            output.add_field(name="Rating", value=ratingWord)
+            if artist:
+                output.add_field(name="Artist", value=artist)
+            elif artist:
+                output.add_field(name="Artists", value=artists)
+            output.add_field(name="Tags", value=tagList, inline=False)
+            output.set_thumbnail(url=imageURL)
+
+            # Edits the pending message with the results
+            await message.edit(embed=output)
+        else:
+            # Edits the pending message with the result
+            await message.edit(content=imageURL)
