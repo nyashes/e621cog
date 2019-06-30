@@ -182,7 +182,7 @@ async def fetch_image(self, ctx, randomize : bool=False, tags : list=[]):
             if not website:
                 return await message.edit(content="Error.")
 
-            result = list(filter(lambda x: set(normal_tags).issubset(set(fx.get('tags').split(' '))), website))
+            result = list(filter(lambda x: set(normal_tags).issubset(set(x.get('tags').split(' '))), website))
 
         result = result[0]
         
