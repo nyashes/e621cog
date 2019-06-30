@@ -161,6 +161,9 @@ async def fetch_image(self, ctx, randomize : bool=False, tags : list=[]):
         if randomize:
             tags.append("order:random")
 
+        # remove duplicates, tags are a limited ressource
+        tags = list(dict.fromkeys(tags))
+
         if not split_search:
             # just take the first result
             result = await sub_fetch_image(self, ctx, 1, tags)
@@ -174,12 +177,12 @@ async def fetch_image(self, ctx, randomize : bool=False, tags : list=[]):
                 if ":" in tag or "~" in tag:
                     special_tags.append(tag)
                 elif "-" in tag:
-                    negative_tags.append(tag)
+                    negative_tags.append(tag[1:])
                 else:
                     normal_tags.append(tag)
 
             while len(special_tags) < 6 and len(negative_tags) > 0:
-                special_tags.append(negative_tags.pop(0))
+                special_tags.append("-" + negative_tags.pop(0))
 
             while len(special_tags) < 6 and len(normal_tags) > 0:
                 special_tags.append(normal_tags.pop(0))
