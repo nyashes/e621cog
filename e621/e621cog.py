@@ -195,7 +195,7 @@ async def fetch_image(self, ctx, randomize : bool=False, tags : list=[]):
                 normal_set = set(mt)
                 negative_set = set(nt)
                 current_set = set(x.get('tags').split(' '))
-                return normal_set.issubset(current_set) and negative_set.isdisjoint(negative_set)
+                return normal_set.issubset(current_set) and negative_set.isdisjoint(current_set)
 
             result = list(filter(lambda x: filter_fun(normal_tags, negative_tags, x), website))
             
