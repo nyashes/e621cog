@@ -201,7 +201,7 @@ async def fetch_image(self, ctx, randomize : bool=False, tags : list=[]):
             
             if len(result) == 0:
                 return await message.edit(content="Error: split search unsuccessful with {} items and MS='{}', SS='{}', NS='{}'".format(
-                    max(50, len(normal_tags) * 20)
+                    max(250, (len(negative_tags) + len(normal_tags)) * 100)
                     , ", ".join(special_tags)
                     , ", ".join(normal_tags)
                     , ", ".join(negative_tags)))
